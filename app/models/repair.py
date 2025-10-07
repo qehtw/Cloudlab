@@ -39,4 +39,3 @@ class Repair(db.Model):
             'status': self.status,
             'repairs_name': self.repairs_name,  # Додаємо поле repairs_name в метод to_dict_basic
         }
-

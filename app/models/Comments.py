@@ -9,7 +9,6 @@ class Comment(db.Model):
     comment_id = db.Column(db.Integer, primary_key=True)
     repair_id = db.Column(db.Integer, db.ForeignKey('repairs.repair_id', ondelete='CASCADE'))  # Зовнішній ключ на repairs
     comment = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
 
     # Відношення до Repair
     repair = db.relationship('Repair', back_populates='comments')
@@ -22,7 +21,6 @@ class Comment(db.Model):
             "comment_id": self.comment_id,
             "repair_id": self.repair_id,
             "comment": self.comment,
-            "created_at": self.created_at.isoformat() if self.created_at else None
         }
 
     @staticmethod

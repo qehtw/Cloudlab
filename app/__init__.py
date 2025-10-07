@@ -1,11 +1,12 @@
-import mysql.connector
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from app.config import Config
-from app.route import register_routes
 import os
 import sys
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import inspect
+from app.config import Config
+from app.route import register_routes
 from app.database import db
+import mysql.connector
 
 print(sys.path)
 
@@ -17,57 +18,70 @@ def create_app():
     register_routes(app)
 
     with app.app_context():
-        create_database()
-        create_tables(app)
-        print("Таблиці даних вже створені або існують.")
-        populate_data()
+        print("Таблиці вже існують або створені.")
 
     return app
 
 
 def create_database():
+    """Створюємо базу даних, якщо її ще немає"""
     connection = mysql.connector.connect(
-        host='127.0.0.1',
-        user='root',
-        password='12345678',
+        host=Config.DB_HOST,
+        user=Config.DB_USER,
+        password=Config.DB_PASSWORD,
     )
     cursor = connection.cursor()
-    # Використовуємо lab4 як одну базу даних
-    cursor.execute("CREATE DATABASE IF NOT EXISTS lab4")
+    cursor.execute(f"CREATE DATABASE IF NOT EXISTS {Config.DB_NAME}")
     cursor.close()
     connection.close()
+    print(f"База даних {Config.DB_NAME} готова.")
 
 
 def create_tables(app):
+    """Створюємо таблиці лише якщо вони відсутні"""
     with app.app_context():
-        db.create_all()  # Створення таблиць згідно моделей Flask
+        inspector = inspect(db.engine)
+        existing_tables = inspector.get_table_names()
+
+        # Перелік моделей та їхніх таблиць
+        metadata = db.Model.metadata
+        for table_name, table_obj in metadata.tables.items():
+            if table_name not in existing_tables:
+                print(f"Створюємо таблицю {table_name}...")
+                table_obj.create(db.engine)
+            else:
+                print(f"Таблиця {table_name} вже існує, пропускаємо.")
 
 
 def populate_data():
+    """Вставка даних з SQL файлу, без дублювання"""
     sql_file_path = os.path.abspath('data.sql')
-    if os.path.exists(sql_file_path):
-        # Використовуємо правильну базу даних (lab4)
-        connection = mysql.connector.connect(
-            host='127.0.0.1',
-            user='root',
-            password='12345678',
-            database='lab4'  # Слід використовувати lab4 замість lab5
-        )
-        cursor = connection.cursor()
-        with open(sql_file_path, 'r') as sql_file:
-            sql_text = sql_file.read()
-            sql_statements = sql_text.split(';')
-            for statement in sql_statements:
-                statement = statement.strip()
-                if statement:
-                    try:
-                        cursor.execute(statement)
-                        connection.commit()
-                    except mysql.connector.Error as error:
-                        print(f"Error executing SQL statement: {error}")
-                        print(f"SQL statement: {statement}")
-                        connection.rollback()
-        cursor.close()
-        connection.close()
-    else:
+    if not os.path.exists(sql_file_path):
         print("SQL файл не знайдений за шляхом:", sql_file_path)
+        return
+
+    connection = mysql.connector.connect(
+        host=Config.DB_HOST,
+        user=Config.DB_USER,
+        password=Config.DB_PASSWORD,
+        database=Config.DB_NAME
+    )
+    cursor = connection.cursor()
+
+    with open(sql_file_path, 'r') as sql_file:
+        sql_text = sql_file.read()
+        sql_statements = sql_text.split(';')
+        for statement in sql_statements:
+            statement = statement.strip()
+            if statement:
+                try:
+                    # Використовуємо IGNORE, щоб уникнути помилок дублювання
+                    cursor.execute(statement)
+                    connection.commit()
+                except mysql.connector.Error as error:
+                    print(f"Помилка при виконанні SQL: {error}")
+                    connection.rollback()
+
+    cursor.close()
+    connection.close()
+    print("Дані вставлені або вже існували.")
