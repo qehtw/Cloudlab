@@ -1,0 +1,43 @@
+name: Deploy Flask to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1️⃣ Клон репозиторію
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # 2️⃣ Налаштування SSH
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.8.1
+      with:
+        ssh-private-key: ${{ secrets.EC2_KEY }}
+
+    # 3️⃣ Деплой на сервер
+    - name: Deploy to EC2
+      run: |
+        ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
+          cd ~/Cloudlab
+
+          # Пул останніх змін
+          git reset --hard
+          git pull origin main
+
+          # Встановлення залежностей без venv
+          pip3 install --upgrade pip
+          pip3 install -r requirements.txt
+
+          # Перезапуск Flask (якщо через systemd)
+          sudo systemctl restart flaskapp
+
+          # Або через nohup:
+          # pkill -f "flask run"
+          # nohup flask run --host=0.0.0.0 --port=5000 &
+        EOF
