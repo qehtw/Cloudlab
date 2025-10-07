@@ -16,7 +16,7 @@ jobs:
 
       # 2️⃣ Налаштувати SSH ключ
       - name: Setup SSH key
-        uses: webfactory/ssh-agent@v0.8.2
+        uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
