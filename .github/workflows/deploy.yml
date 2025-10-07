@@ -1,4 +1,4 @@
-name: Deploy Flask to EC2
+name: Deploy to EC2
 
 on:
   push:
@@ -10,34 +10,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1️⃣ Клон репозиторію
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      # 1️⃣ Отримати код з GitHub
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    # 2️⃣ Налаштування SSH
-    - name: Setup SSH
-      uses: webfactory/ssh-agent@v0.9.0
-      with:
-        ssh-private-key: ${{ secrets.EC2_KEY }}
+      # 2️⃣ Налаштувати SSH ключ
+      - name: Setup SSH key
+        uses: webfactory/ssh-agent@v0.8.2
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
-    # 3️⃣ Деплой на сервер
-    - name: Deploy to EC2
-      run: |
-        ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
-          cd ~/Cloudlab
+      # 3️⃣ Підключення до EC2 і виконання команд
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ec2-user@YOUR_EC2_IP << 'EOF'
+            cd /home/ec2-user/Cloudlab
+            git pull origin main
+            pip3 install -r requirements.txt
+            # зупинити попередній процес (якщо flask через gunicorn)
+            pkill -f "gunicorn" || true
+            # запустити Flask через gunicorn
+            nohup gunicorn -w 4 -b 0.0.0.0:5000 app:app &
+          EOF
 
-          # Пул останніх змін
-          git reset --hard
-          git pull origin main
-
-          # Встановлення залежностей без venv
-          pip3 install --upgrade pip
-          pip3 install -r requirements.txt
-
-          # Перезапуск Flask (якщо через systemd)
-          sudo systemctl restart flaskapp
-
-          # Або через nohup:
-          # pkill -f "flask run"
-          # nohup flask run --host=0.0.0.0 --port=5000 &
-        EOF
