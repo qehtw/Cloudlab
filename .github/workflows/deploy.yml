@@ -10,23 +10,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Клон репозиторію
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      # Запуск SSH агента і додавання ключа з секретів
-      - name: Start SSH agent
-        uses: webfactory/ssh-agent@v0.7.0
-        with:
-          ssh-private-key: ${{ secrets.DEPLOY_KEY }}
+    - name: Start SSH agent and add key
+      uses: webfactory/ssh-agent@v0.7.1
+      with:
+        ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
-      # Деплой на сервер
-      - name: Deploy to EC2
-        run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@51.20.190.221 "
-          cd ~/Cloudlab &&
-          git reset --hard &&
-          git pull origin main &&
-          pkill -f 'python app.py' || true &&
-          nohup python3 app.py > app.log 2>&1 &
-          "
+    - name: Deploy to EC2
+      run: |
+        ssh -o StrictHostKeyChecking=no ec2-user@51.20.190.221 "
+        cd ~/Cloudlab &&
+        git fetch origin &&
+        git reset --hard origin/main &&
+        python3 -m pip install --upgrade pip &&
+        pip install -r requirements.txt &&
+        sudo systemctl restart cloudlab.service
+        "
