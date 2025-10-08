@@ -23,7 +23,7 @@ jobs:
     # 3. Деплой на EC2
     - name: Deploy to EC2
       run: |
-        ssh -o StrictHostKeyChecking=no ec2-user@51.20.190.221 "
+        ssh -o StrictHostKeyChecking=no ec2-user@13.60.218.1 "
         cd ~/Cloudlab &&
         git fetch origin &&
         git reset --hard origin/main &&
