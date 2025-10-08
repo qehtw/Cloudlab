@@ -20,6 +20,8 @@ jobs:
 
     - name: Deploy to EC2
       run: |
+        mkdir -p ~/.ssh
+        ssh-keyscan -H 13.60.218.1 >> ~/.ssh/known_hosts
         rsync -avz --exclude '.git*' ./ ec2-user@13.60.218.1:/home/ec2-user/Cloudlab/
         ssh ec2-user@13.60.218.1 << 'EOF'
           cd /home/ec2-user/Cloudlab
