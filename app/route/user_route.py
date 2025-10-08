@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from flask import Blueprint, jsonify, request, make_response
+from flask import Blueprint, jsonify, request, make_response, Response
 from flasgger import swag_from
 from ..controllers import UsersController
 from ..models.user import insert_User, User
