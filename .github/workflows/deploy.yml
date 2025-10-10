@@ -21,9 +21,9 @@ jobs:
     - name: Deploy to EC2
       run: |
         mkdir -p ~/.ssh
-        ssh-keyscan -H 13.60.218.1 >> ~/.ssh/known_hosts
-        rsync -avz --exclude '.git*' ./ ec2-user@13.60.218.1:/home/ec2-user/Cloudlab/
-        ssh ec2-user@13.60.218.1 << 'EOF'
+        ssh-keyscan -H 51.20.141.9 >> ~/.ssh/known_hosts
+        rsync -avz --exclude '.git*' ./ ec2-user@51.20.141.9:/home/ec2-user/Cloudlab/
+        ssh ec2-user@51.20.141.9 << 'EOF'
           cd /home/ec2-user/Cloudlab
           python3 -m venv venv
           source venv/bin/activate
