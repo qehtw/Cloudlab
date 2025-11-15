@@ -2,16 +2,17 @@ FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
+ENV DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /app
 
 # Install build deps then runtime deps
 COPY requirements.txt ./
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends gcc libpq-dev curl \
+    && apt-get install -y --no-install-recommends build-essential gcc libpq-dev curl \
     && pip install --no-cache-dir -r requirements.txt \
     && pip install --no-cache-dir gunicorn \
-    && apt-get remove -y gcc \
+    && apt-get remove -y --purge build-essential gcc \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
