@@ -15,6 +15,19 @@ def create_app():
     app.config.from_object(Config)
     db.init_app(app)
 
+    # Compatibility shim for flasgger with Flask 3.x
+    # flasgger expects `Markup` to be importable from `flask` (from flask import Markup)
+    # but in Flask 3 `Markup` comes from markupsafe. Add it to the flask module
+    # so older libraries (flasgger) keep working until we upgrade them.
+    try:
+        import flask as _flask
+        from markupsafe import Markup as _Markup
+        if not hasattr(_flask, 'Markup'):
+            _flask.Markup = _Markup
+    except Exception:
+        # If the shim fails, continue and let the import error surface normally.
+        pass
+
     register_routes(app)
 
     with app.app_context():
