@@ -85,3 +85,5 @@ def populate_data():
     cursor.close()
     connection.close()
     print("Дані вставлені або вже існували.")
+
+app = create_app()
