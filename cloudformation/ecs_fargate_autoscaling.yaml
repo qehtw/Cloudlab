@@ -146,6 +146,9 @@ Resources:
     Type: AWS::ECS::Service
     DependsOn: Listener
     Properties:
+      # Make the service name predictable so the ApplicationAutoScaling ResourceId
+      # can reference it (service/<Cluster>/<StackName>-service)
+      ServiceName: !Sub "${AWS::StackName}-service"
       Cluster: !Ref ECSCluster
       DeploymentConfiguration:
         MaximumPercent: 200
@@ -166,6 +169,7 @@ Resources:
 
   ServiceScalableTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: ECSService
     Properties:
       MaxCapacity: !Ref MaxCapacity
       MinCapacity: !Ref MinCapacity
