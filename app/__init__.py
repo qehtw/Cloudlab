@@ -16,16 +16,32 @@ def create_app():
     db.init_app(app)
 
     # Compatibility shim for flasgger with Flask 3.x
-    # flasgger expects `Markup` to be importable from `flask` (from flask import Markup)
-    # but in Flask 3 `Markup` comes from markupsafe. Add it to the flask module
-    # so older libraries (flasgger) keep working until we upgrade them.
+    # flasgger expects certain names (Markup, JSONEncoder) to be available
+    # under the `flask` package. In Flask 3 these were moved/changed.
+    # Provide minimal shims so flasgger can import them until a proper
+    # upstream fix/upgrade is applied.
     try:
         import flask as _flask
+        # Markup moved to markupsafe
         from markupsafe import Markup as _Markup
         if not hasattr(_flask, 'Markup'):
             _flask.Markup = _Markup
+
+        # JSONEncoder used to live at flask.json.JSONEncoder. Provide a thin
+        # compatibility alias to the stdlib json.JSONEncoder and helper dumps
+        # so libraries that import JSONEncoder/dumps from flask.json still work.
+        import json as _json
+        try:
+            import flask.json as _flask_json
+            if not hasattr(_flask_json, 'JSONEncoder'):
+                _flask_json.JSONEncoder = _json.JSONEncoder
+            if not hasattr(_flask_json, 'dumps'):
+                _flask_json.dumps = lambda obj, **kwargs: _json.dumps(obj, **kwargs)
+        except Exception:
+            # If flask.json isn't importable for some reason, skip this shim.
+            pass
     except Exception:
-        # If the shim fails, continue and let the import error surface normally.
+        # If any of the shims fail, let the original import errors surface.
         pass
 
     register_routes(app)
