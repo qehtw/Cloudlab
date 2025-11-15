@@ -9,10 +9,12 @@ WORKDIR /app
 # Install build deps then runtime deps
 COPY requirements.txt ./
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends build-essential gcc libpq-dev curl \
+    && apt-get install -y --no-install-recommends \
+       build-essential gcc libpq-dev curl libssl-dev libffi-dev python3-dev pkg-config \
+       libxml2-dev libxslt-dev zlib1g-dev rustc cargo git wget \
     && pip install --no-cache-dir -r requirements.txt \
     && pip install --no-cache-dir gunicorn \
-    && apt-get remove -y --purge build-essential gcc \
+    && apt-get remove -y --purge build-essential gcc rustc cargo python3-dev pkg-config \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
