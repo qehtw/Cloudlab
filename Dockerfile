@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /app
 
-# Install build deps then runtime deps
+
 COPY requirements.txt ./
 RUN apt-get update \
      && apt-get install -y --no-install-recommends \
@@ -22,4 +22,4 @@ COPY . .
 
 EXPOSE 8000
 
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "app:app"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "app:create_app()"]
