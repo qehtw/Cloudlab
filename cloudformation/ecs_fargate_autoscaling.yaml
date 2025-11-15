@@ -165,7 +165,7 @@ Resources:
         - ContainerName: cloudlab-container
           ContainerPort: !Ref ContainerPort
           TargetGroupArn: !Ref TargetGroup
-      Role: !GetAtt ECSServiceRole.Arn
+      # Role property removed for Fargate service - Fargate does not require a service role
 
   ServiceScalableTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
