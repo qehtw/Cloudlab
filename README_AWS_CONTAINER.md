@@ -96,3 +96,4 @@ Notes, limitations and next steps
 - The template configures CPU-based target tracking. You can add a memory-based policy or custom CloudWatch alarms if you prefer.
 - For production, consider using HTTPS on the ALB, private subnets for tasks, and more fine-grained IAM.
 - If you'd like, I can add a Terraform version, or a GitHub Actions workflow to build/push automatically and trigger deployment.
+- 
