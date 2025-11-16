@@ -37,12 +37,21 @@ async def worker(session: aiohttp.ClientSession, url: str, stop_at: float, stats
         await asyncio.sleep(0)
 
 
-async def run(url: str, concurrency: int, duration: int, report_interval: int = 5):
+async def run(url: str, concurrency: int, duration: int, report_interval: int = 5, ramp_up: int = 0, method: str = 'GET', payload: str = None, headers: dict | None = None):
     stats = {'total': 0, 'success': 0, 'errors': 0, 'latencies': []}
-    timeout = aiohttp.ClientTimeout(total=20)
+    timeout = aiohttp.ClientTimeout(total=30)
     stop_at = time.time() + duration
     async with aiohttp.ClientSession(timeout=timeout) as session:
-        tasks = [asyncio.create_task(worker(session, url, stop_at, stats, i)) for i in range(concurrency)]
+        tasks = []
+
+        # Ramp-up: start workers gradually over ramp_up seconds
+        if ramp_up and ramp_up > 0 and concurrency > 1:
+            interval = ramp_up / max(1, concurrency - 1)
+            for i in range(concurrency):
+                tasks.append(asyncio.create_task(worker(session, url, stop_at, stats, i)))
+                await asyncio.sleep(interval)
+        else:
+            tasks = [asyncio.create_task(worker(session, url, stop_at, stats, i)) for i in range(concurrency)]
 
         next_report = time.time() + report_interval
         while time.time() < stop_at:
